@@ -32,7 +32,8 @@ class Agente:
         self.simulacion_tail_f = None
         self.simulacion_tail_c = None
         self.tam_registro = None
-        self.rutaSegura = None
+        self.urovoros = None
+        self.rutaSegura = False
         self.peligro = None
 
 
@@ -121,13 +122,19 @@ class Agente:
                 self.ruta[celda[0]][celda[1]] = puntaje_g[celda]
                 celda = camino[celda]
             if self.verificacion2():
+                self.rutaSegura = True
                 return
             elif self.verificacion(puntaje_g[self.celdaObj]):
+                self.rutaSegura = True
                 return
             else:
+                print("Hay camino la manzana pero no es seguro")
+                self.rutaSegura = False
                 self.borrarRuta()
                 self.a_estrella3(self.head_f, self.head_c, self.tail_f, self.tail_c)
         else:
+            print("No hay camino para manzana")
+            self.rutaSegura = False
             self.a_estrella3(self.head_f, self.head_c, self.tail_f, self.tail_c)
 
     def a_estrella2(self,f_inicio,c_inicio,f_obj,c_obj):
@@ -285,6 +292,87 @@ class Agente:
             print(objetivo)
             print(objetivo in camino)
 
+    def a_estrella4(self,f_inicio,c_inicio,f_obj,c_obj,costo,marca):
+        inicio = (f_inicio, c_inicio)
+        objetivo = (f_obj, c_obj)
+        # puntaje g - costo en paso desde el inicia a una celda
+        puntaje_g = {(x, y): float('inf') for x in range(17) for y in range(19)}
+        puntaje_f = {(x, y): float('inf') for x in range(17) for y in range(19)}
+        puntaje_g[inicio] = 0
+        puntaje_f[inicio] = self.h(inicio, objetivo)
+
+        disponibles = PriorityQueue()
+        disponibles.put((self.h(inicio, objetivo), self.h(inicio, objetivo), inicio))
+
+        # Estructuración del path o camino
+
+        camino = {}
+
+        while not disponibles.empty():
+            celdaActual = disponibles.get()[2]
+            if celdaActual == objetivo:
+                break
+            coor_f = 25 + (16 + (32 * (celdaActual[0] - 1)))
+            coor_c = 28 + (16 + (32 * (celdaActual[1] - 1)))
+            unidad_f = 32
+            unidad_c = 32
+            for d in 'ESNW':
+                if ((100 > self.ultimoEstado[coor_f][coor_c + unidad_c] > 55) or \
+                    (f_obj == celdaActual[0] and c_obj == celdaActual[1] + 1)) \
+                        and \
+                        d == 'E':
+                    celdaVecina = (celdaActual[0], celdaActual[1] + 1)
+                    temp_puntaje_g = puntaje_g[celdaActual] + 1
+                    temp_puntaje_f = temp_puntaje_g + self.h(celdaVecina, objetivo)
+                    if temp_puntaje_f < puntaje_f[celdaVecina]:
+                        puntaje_g[celdaVecina] = temp_puntaje_g
+                        puntaje_f[celdaVecina] = temp_puntaje_f
+                        disponibles.put((temp_puntaje_f, self.h(celdaVecina, objetivo), celdaVecina))
+                        camino[celdaVecina] = celdaActual
+                if ((100 > self.ultimoEstado[coor_f][coor_c - unidad_c] > 55) or \
+                    (f_obj == celdaActual[0] and c_obj == (celdaActual[1] - 1))) and \
+                        d == 'W':
+                    celdaVecina = (celdaActual[0], celdaActual[1] - 1)
+                    temp_puntaje_g = puntaje_g[celdaActual] + 1
+                    temp_puntaje_f = temp_puntaje_g + self.h(celdaVecina, objetivo)
+                    if temp_puntaje_f < puntaje_f[celdaVecina]:
+                        puntaje_g[celdaVecina] = temp_puntaje_g
+                        puntaje_f[celdaVecina] = temp_puntaje_f
+                        disponibles.put((temp_puntaje_f, self.h(celdaVecina, objetivo), celdaVecina))
+                        camino[celdaVecina] = celdaActual
+                if ((100 > self.ultimoEstado[coor_f - unidad_f][coor_c] > 55) or \
+                    (f_obj == (celdaActual[0] - 1) and c_obj == celdaActual[1])) and \
+                        d == 'N':
+                    celdaVecina = (celdaActual[0] - 1, celdaActual[1])
+                    temp_puntaje_g = puntaje_g[celdaActual] + 1
+                    temp_puntaje_f = temp_puntaje_g + self.h(celdaVecina, objetivo)
+                    if temp_puntaje_f < puntaje_f[celdaVecina]:
+                        puntaje_g[celdaVecina] = temp_puntaje_g
+                        puntaje_f[celdaVecina] = temp_puntaje_f
+                        disponibles.put((temp_puntaje_f, self.h(celdaVecina, objetivo), celdaVecina))
+                        camino[celdaVecina] = celdaActual
+                if ((100 > self.ultimoEstado[coor_f + unidad_f][coor_c] > 55) or \
+                    (f_obj == (celdaActual[0] + 1) and c_obj == celdaActual[1])) and \
+                        d == 'S':
+                    celdaVecina = (celdaActual[0] + 1, celdaActual[1])
+                    temp_puntaje_g = puntaje_g[celdaActual] + 1
+                    temp_puntaje_f = temp_puntaje_g + self.h(celdaVecina, objetivo)
+                    if temp_puntaje_f < puntaje_f[celdaVecina]:
+                        puntaje_g[celdaVecina] = temp_puntaje_g
+                        puntaje_f[celdaVecina] = temp_puntaje_f
+                        disponibles.put((temp_puntaje_f, self.h(celdaVecina, objetivo), celdaVecina))
+                        camino[celdaVecina] = celdaActual
+
+
+
+        if puntaje_g[objetivo] < (costo - (marca - 1)):
+            self.borrarRuta(marca)
+            celda = objetivo
+            while celda != inicio:
+                self.ruta[celda[0]][celda[1]] = (puntaje_g[celda] + (marca - 1))
+                celda = camino[celda]
+
+
     def verificacion(self,n):
         self.simulacion(n)
         return self.a_estrella2(self.simulacion_head_f,self.simulacion_head_c,self.simulacion_tail_f \
@@ -297,13 +385,6 @@ class Agente:
         self.simulacion_head_c = self.head_c
         self.simulacion_tail_f = self.tail_f
         self.simulacion_tail_c = self.tail_c
-        #self.longitud = self.tamanoSimulacion(n)
-        """
-        print("Coordenadas cabeza")
-        print((self.simulacion_head_f,self.simulacion_head_c))
-        print("Coordenadas cola")
-        print((self.simulacion_tail_f, self.simulacion_tail_c))
-        """
         inicio = self.simulacionEstado[self.simulacion_head_f][self.simulacion_head_c]
 
 
@@ -352,6 +433,12 @@ class Agente:
             ajuste = self.checkarCambio()
             
             if ajuste == True:
+
+                if self.celdaObj != None and (1 < marca < self.ruta[self.celdaObj[0]][self.celdaObj[1]])\
+                        and self.rutaSegura and self.tam_registro < 50:
+                    costo = self.ruta[self.celdaObj[0]][self.celdaObj[1]]
+                    self.a_estrella4(self.head_f,self.head_c,self.celdaObj[0],self.celdaObj[1],\
+                                     costo,marca)
 
                 if self.ruta[self.head_f][self.head_c - 1] == marca:
 
@@ -622,10 +709,9 @@ class Agente:
             self.simulacion_tail_f = minimo_loc[0]
             self.simulacion_tail_c = minimo_loc[1]
 
-    def borrarRuta(self):
+    def borrarRuta(self,marca = 1):
         fil = self.head_f
         col = self.head_c
-        marca = 1
 
         while True:
             if self.ruta[fil + 1][col] == marca:
@@ -646,6 +732,8 @@ class Agente:
                 marca += 1
             else:
                 break
+
+
 
     def verificacion2(self):
         costo = self.ruta[self.celdaObj[0]][self.celdaObj[1]]
@@ -681,6 +769,7 @@ class Agente:
                 minimo_loc = None
             else:
                 break
+        self.tam_registro = tam
         if tam < costo:
             return True
         else:
@@ -720,6 +809,7 @@ class Agente:
         while True:
 
             if tam > camino_longitud:
+                self.tam_registro = tam
                 return tam
 
 
@@ -727,13 +817,13 @@ class Agente:
                 minimo = self.simulacionEstado[f-u][c]
                 minimo_loc = (f - u,c)
             if self.simulacionEstado[f + u][c] > ref and self.simulacionEstado[f - u][c] < minimo:
-                minimo = self.simulacionEstado[f - u][c]
+                minimo = self.simulacionEstado[f + u][c]
                 minimo_loc = (f + u, c)
             if self.simulacionEstado[f][c-u] > ref and self.simulacionEstado[f][c-u] < minimo:
                 minimo = self.simulacionEstado[f][c-u]
                 minimo_loc = (f, c - u)
-            if self.simulacionEstado[f][c-u] > ref and self.simulacionEstado[f][c-u] < minimo:
-                minimo = self.simulacionEstado[f][c-u]
+            if self.simulacionEstado[f][c+u] > ref and self.simulacionEstado[f][c-u] < minimo:
+                minimo = self.simulacionEstado[f][c+u]
                 minimo_loc = (f, c + u)
             if minimo_loc != None:
                 tam += 1
@@ -743,6 +833,7 @@ class Agente:
                 minimo = 500
                 minimo_loc = None
             else:
+                self.tam_registro = tam
                 return tam
 
 

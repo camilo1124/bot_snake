@@ -10,18 +10,13 @@ import time
 
 
 def setup():
-    chrome_options=Options()
-    chrome_options.add_experimental_option("detach",True)
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.implicitly_wait(30)
+    driver = webdriver.Chrome()
     driver.get('https://www.google.com/fbx?fbx=snake_arcade')
     driver.maximize_window()
-    #boton = driver.find_element(By.XPATH, '/html/body/div/div[3]/div/div[4]/div[2]')
-    wait = WebDriverWait(driver,30)
-    #boton = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div/div[3]/div/div[4]/div[2]')))
-    #boton = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div/div/div/div/div/div[3]/div/div[4]/div[2]')))
+    wait = WebDriverWait(driver,10)
     boton = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div/div[3]/div/div[4]/div[2]/img')))
     boton.click()
+    driver.implicitly_wait(10)
     actions = ActionChains(driver)
     actions.send_keys(Keys.ARROW_UP)
     actions.perform()
